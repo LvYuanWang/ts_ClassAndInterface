@@ -1,21 +1,61 @@
-// 面向对象程序设计(Object Oriented Programming) OOP 是一张计算机编程架构
-// OOP特点 = 封装 + 继承 + 多态
-// OOP达到了软件工程的主要目标: 重要性、灵活性和扩展性
+// TS中类的主要结构: 属性、构造函数(constructor)、方法、存取器(getter,setter)、访问修饰符、装饰器
+// 属性类似于变量，加上相关类型标注，当然也能通过值的类型进行类型推导
+// 构造函数、方法、存取器类似于函数, 加上参数的类型与返回类型
 
-// 人的认知本身就是会从潜意识中对世界的事务进行分类
-// 因为分类认知之后, 给一个具体对象打上分类标签, 方便我们记忆, 甚至是扩展记忆的连贯性
+// 访问修饰符:
+//    public（默认）：公共访问修饰符，表示类成员可以在任何地方被访问。如果没有显式地指定访问修饰符，默认为 public。
+//    private：私有访问修饰符，表示类成员只能在类内部被访问。私有成员对于外部代码是不可见的，只能在类的内部使用。
+//    protected：受保护的访问修饰符，表示类成员可以在类内部和继承类中被访问。受保护成员对于外部代码是不可见的，但可以在派生类中访问
+//    # ES2022新特性, 加上后表示私有属性和方法
+/*
+class Animal {
+  name: string;
+  protected color: string;
+  private _age: number;
+  #type: string;  // 这种形式在js中也存在, js的新特性, 表示私有属性
+  constructor(name: string, color: string, age: number, type: string) {
+    this.name = name;
+    this.color = color;
+    this._age = age;
+    this.#type = type;
+  }
 
-// 所以面向对象中所说的类: 就是具有相似属性相似行为的内容进行代码的归类
-// 无非也就是为了开发者的记忆, 阅读和扩展
+  show() {
+    console.log(this.name, this.color, this._age, this.#type);
+  }
+}
+*/
+// 优化简写写法
+class Animal {
+  #type: string;  // ES2022新语法: 这种形式在js中也存在, js的新特性, 表示私有属性
+  constructor(public name: string, protected color: string, private _age: number, type: string) {
+    this.#type = type;
+  }
 
-// 从类型系统的角度类看, 一个类, 其实就是创建了 一种新的数据结构类型。所以说, 在很多语言当中, 一个类就是一个类型
+  show() {
+    console.log(this.name, this.color, this._age, this.#type);
+  }
+}
 
-// 在TS当中, 类也是一种结构化类型
+class Cat extends Animal {
+  info() {
+    // 父类中 public 修饰的属性和方法在子类中都能访问
+    console.log(this.name);
+    this.show();
+    // 父类中 protected 修饰的属性和方法在子类中都能访问
+    console.log(this.color);
+    this.show();
+    // 父类中 private 修饰的属性和方法在子类中不能访问
+    // console.log(this._age); // 属性“_age”为私有属性，只能在类“Animal”中访问
+    // console.log(this.#type); // 属性 "#type" 在类 "Animal" 外部不可访问，因为它具有专用标识符
+  }
+}
 
-// ES6之前, js使用构造函数来创建类, 基于原型的效果来实现继承。
-// 但是这样给函数带来了二义性。也就是说一个构造函数, 既能表示一个简单函数, 也能表示是一个构造函数(类)
-// 虽然之前一直约定俗称的默认只要是函数名首字母大写就是构造函数, 但是一直没有语法层面上的区分
+const a = new Animal("小丑", "white", 3, "Dog");
+console.log(a.name);
+// console.log(a.color); // 属性 color 受保护, 只能在类 Animal 及其子类中访问
 
-// 所以ES6之后, 加上了class和箭头函数, 专门用来区分类和一般函数
-
-// TS中扩展了类的一些语法, 比如抽象类, 接口以及一些访问符... 目的就是为了面向对象的语法更加完整。
+const cat = new Cat("小黑", "咖啡色", 8, "Cat");
+console.log(cat.name);
+// console.log(cat._age); // 属性“_age”为私有属性，只能在类“Animal”中访问
+cat.info();

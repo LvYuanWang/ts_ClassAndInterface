@@ -1,19 +1,104 @@
-首先，面向对象程序设计（Object Oriented Programming，OOP）是**一种计算机编程架构**。
+## 访问修饰符
 
-> **OOP特点** = **封装** + **继承** + **多态**，OOP达到了软件工程的三个主要目标：**重用性**、**灵活性**和**扩展性**
->
-> 面向对象使得软件的开发方法与过程尽可能接近人类认识世界、解决现实问题的方法和过程
+类的主要结构，无非就是**属性、构造函数、方法、存取器、访问修饰符、装饰器**，在typescript中，我们在需要的部分加上类型标注就行了
 
-> 人总喜欢把我们已知的，或者未知的事务分类，好人？坏人？人？动物？
->
-> 因为这样归类，给一个具体对象打上标签之后方便我们记忆，甚至是扩展记忆的连贯性。
->
-> 虽然说有时候具有很强的主观性，但不可否认，这是我们人类最容易记忆的方式。
+**属性的类型标识类似于变量，而构造函数、方法、存取器的类型标注其实就是函数**：
 
-所以，当我们的程序越来越复杂的时候，就需要一种可读性，可理解性更强，更适合人类的程序设计方式。那就是面向对象。所以在互联网行业，很多流行的后端语言都是面向对象的，比如java，c#等等，因为涉及的业务复杂，为了在这个纷繁复杂的程序业务世界中，找到最清楚的脉络，那就是像我们人类认知世界一样，把各个内容分类，打上标签。
+```typescript
+// TS中类的主要结构：属性、构造函数、方法、存取器、访问修饰符、装饰器
+// 属性类似于变量，加上相关类型标注，当然也能通过值的类型进行类型推导
+// 构造函数、方法、存取器类似于函数，加上参数的类型与返回类型
 
-所以面向对象中所说的类，就是对具有相似属性，相似行为的内容进行代码的归类。无非也就是为了开发者记忆，阅读和扩展。
+// 访问修饰符：可以修饰属性和方法
+// public（默认）: 可以在类、类的子类中，以及类和子类的实例对象访问
+// protected: 仅能在类和子类中访问
+// private: 仅能在类的内部被访问到
+// # ES2022新特性，私有属性和方法
+/*
+class Animal{
+  public name: string;
+  protected color: string;
+  private _age: number;
+  #type: string;
+  constructor(name: string, color:string, _age: number, type:string) { 
+    this.name = name;
+    this.color = color;
+    this._age = _age;
+    this.#type = type;
+  }
 
-> 以类型系统的角度来看：一个类，其实就是创建了一种新的数据结构类型。所以一个类，就是一个类型
+  show() { 
+    console.log(this.name, this.color, this._age)
+  }
+}
+*/
+class Animal{
+  
+  #type: string;
+  constructor(
+    public name: string,
+    protected color: string,
+    private _age: number,
+    type: string) { 
+    this.#type = type;
+  }
 
-在ES6之前，传统的JavaScript程序使用构造函数来创建类，基于原型的效果来实现继承。但是这样就让函数有了二义性，简单来说一个构造函数，既能表示是一个函数，也能表示是一个构造函数(类)，虽然之前一直约定俗成的默认只要函数名首字母大写就是构造函数，但是却一直没有语法层面的区分，所以ES6之后加上了class和箭头函数，专门用来区分类和一般函数。
+  show() { 
+    console.log(this.name, this.color, this._age)
+  }
+}
+
+class Cat extends Animal{
+  info() { 
+    // 父类中public修饰的属性和方法在子类中都能访问
+    console.log(this.name)
+    this.show();
+    // 父类中protected修饰的属性和方法在子类中都能访问
+    console.log(this.name)
+    this.show();
+
+    // 父类中private修饰的属性和方法在子类中 不能访问
+    // console.log(this._age);
+  }
+}
+
+
+const a = new Animal("小白", "白色", 3, 'Dog');
+console.log(a.name);
+a.show();
+// console.log(a.color);
+// console.log(a._age);
+
+const c = new Cat("小猫", "花色", 2, 'Cat');
+console.log(c.name);
+c.info();
+```
+
+> **注意1：**`"strict": true`会默认开启`"strictPropertyInitialization":true`,也就是属性必须初始化，如果希望关闭这个特性，单独设置`"strictPropertyInitialization":false`即可
+
+- `public`：在**类、类的实例、子类**中都能被访问。
+- `protected`：仅能在**类与子类中**被访问。
+- `private`：仅能在**类的内部**被访问。
+- `#`：仅能在**类的内部**被访问。ES2022新特性
+
+需要注意的有两个地方：
+
+1、`private`实际是typescript的访问修饰符，因此在转换为js代码之后，实际上是会消失的
+
+2、私有字段`#`实际是ES2022中被正式采纳的标准
+
+3、如果不添加任何访问修饰符，**默认`public`**，我们一般不会为构造函数添加修饰符，保持默认即可。
+
+上面构造函数的写法还是略显麻烦，我们其实可以简写：
+
+```typescript
+class Animal { 
+  #type: 'cat' | 'dog';
+  constructor(public name: string, public color: string, private _age: number, type: 'cat' | 'dog') {
+    this.#type = type;
+  }
+  ......
+}
+```
+
+> 用 `#` 标记的私有字段，目前还不能以类似于 `public` 和 `private` 修饰符的构造函数参数简写形式声明
