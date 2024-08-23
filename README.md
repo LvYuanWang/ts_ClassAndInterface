@@ -1,38 +1,43 @@
-## 访问修饰符
+## 存取器(访问器)属性
 
-类的主要结构，无非就是**属性、构造函数、方法、存取器、访问修饰符、装饰器**，在typescript中，我们在需要的部分加上类型标注就行了
-
-**属性的类型标识类似于变量，而构造函数、方法、存取器的类型标注其实就是函数**：
+访问器属性的写法几乎和JS一样，大家只需要注意一些小细节就行了
 
 ```typescript
-// TS中类的主要结构：属性、构造函数、方法、存取器、访问修饰符、装饰器
-// 属性类似于变量，加上相关类型标注，当然也能通过值的类型进行类型推导
-// 构造函数、方法、存取器类似于函数，加上参数的类型与返回类型
-
-// 访问修饰符：可以修饰属性和方法
-// public（默认）: 可以在类、类的子类中，以及类和子类的实例对象访问
-// protected: 仅能在类和子类中访问
-// private: 仅能在类的内部被访问到
-// # ES2022新特性，私有属性和方法
-/*
-class Animal{
+class Animal {
   public name: string;
   protected color: string;
   private _age: number;
   #type: string;
-  constructor(name: string, color:string, _age: number, type:string) { 
+  constructor(name: string, color: string, _age: number, type: string) {
     this.name = name;
     this.color = color;
     this._age = _age;
     this.#type = type;
   }
 
-  show() { 
-    console.log(this.name, this.color, this._age)
+  get age() {
+    return this._age;
+  }
+
+  set age(value: number) {
+    if (value < 0 || value > 150) throw new Error("年龄不符合规范...");
+    this._age = value;
+  }
+
+  get type(): string {
+    return this.#type;
+  }
+
+  set type(value: "Cat" | "Dog") {
+    this.#type = value;
+  }
+
+  show() {
+    console.log(this.name, this.color, this._age);
   }
 }
-*/
-class Animal{
+
+/* class Animal{
   
   #type: string;
   constructor(
@@ -46,15 +51,15 @@ class Animal{
   show() { 
     console.log(this.name, this.color, this._age)
   }
-}
+} */
 
-class Cat extends Animal{
-  info() { 
+class Cat extends Animal {
+  info() {
     // 父类中public修饰的属性和方法在子类中都能访问
-    console.log(this.name)
+    console.log(this.name);
     this.show();
     // 父类中protected修饰的属性和方法在子类中都能访问
-    console.log(this.name)
+    console.log(this.name);
     this.show();
 
     // 父类中private修饰的属性和方法在子类中 不能访问
@@ -62,43 +67,67 @@ class Cat extends Animal{
   }
 }
 
-
-const a = new Animal("小白", "白色", 3, 'Dog');
+const a = new Animal("小白", "白色", 3, "Dog");
 console.log(a.name);
 a.show();
+a.age = -1;
+a.type = "Cat";
+
 // console.log(a.color);
 // console.log(a._age);
 
-const c = new Cat("小猫", "花色", 2, 'Cat');
+const c = new Cat("小猫", "花色", 2, "Cat");
 console.log(c.name);
 c.info();
+
 ```
 
-> **注意1：**`"strict": true`会默认开启`"strictPropertyInitialization":true`,也就是属性必须初始化，如果希望关闭这个特性，单独设置`"strictPropertyInitialization":false`即可
+访问器属性 如果有set，那么默认get返回具体的类型。
 
-- `public`：在**类、类的实例、子类**中都能被访问。
-- `protected`：仅能在**类与子类中**被访问。
-- `private`：仅能在**类的内部**被访问。
-- `#`：仅能在**类的内部**被访问。ES2022新特性
-
-需要注意的有两个地方：
-
-1、`private`实际是typescript的访问修饰符，因此在转换为js代码之后，实际上是会消失的
-
-2、私有字段`#`实际是ES2022中被正式采纳的标准
-
-3、如果不添加任何访问修饰符，**默认`public`**，我们一般不会为构造函数添加修饰符，保持默认即可。
-
-上面构造函数的写法还是略显麻烦，我们其实可以简写：
+所以本身可选属性这种写法和访问器属性get,set一起写就有逻辑上的冲突。
 
 ```typescript
 class Animal { 
-  #type: 'cat' | 'dog';
-  constructor(public name: string, public color: string, private _age: number, type: 'cat' | 'dog') {
-    this.#type = type;
+  private _age?: number;
+  // ......其他省略
+  get age() {
+    return this._age;
   }
-  ......
+  set age(value:number) {
+    if (value < 0) throw new Error('年龄不能为负数')
+    this._age = value;
+  }
 }
 ```
 
-> 用 `#` 标记的私有字段，目前还不能以类似于 `public` 和 `private` 修饰符的构造函数参数简写形式声明
+上面的代码就会直接报错：
+
+```shell
+不能将类型“number | undefined”分配给类型“number”。
+不能将类型“undefined”分配给类型“number”。ts(2322)
+```
+
+**修改方式一：**当然就是**去掉`private _age: number;`的可选属性**，因为这本来就是和访问器属性冲突
+
+**修改方式二：** **删除set属性访问器**，如果set不是必要的，去掉set，当然也能避免这种逻辑冲突
+
+**修改方式三：** **在get方法中加入对`undefined`的判断**
+
+```typescript
+get age() {
+  if(this._age === undefined) throw new Error('年龄未知')
+  return this._age;
+}
+```
+
+**修改方式四：非空断言**
+
+```typescript
+get age() {
+  return this._age!;
+}
+```
+
+**修改方式五：**
+
+一般我们都会默认打开`tsconfig.json`的配置属性`"strict": true`，`"strictNullChecks": true`当然也随之开启。既然上面报错**不能将类型“undefined”分配给类型“number”**，其实就是因为把`undefined`作为了单独类型严格检查，当然不能赋值给`number`类型。如果不把`undefined`和`null`作为单独的类型严格检查，当然也就不会报这种错误了。`"strictNullChecks": fasle`即可。不过一般不建议随便修改工程配置项
