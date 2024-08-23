@@ -1,101 +1,53 @@
-## this返回类型
+## 类的泛型支持
 
-this可以用作值，也能用作类型。
-
-比如我们现在要做一个ES6的`Set`数据结构的简化版：
+同样，类也是支持泛型的，上面的SimpleSet我们基本上限定了只能了数字类型，我们应该使用泛型，到时候传递的是什么类型，SimpleSet中保存的就应该是什么类型
 
 ```typescript
-class SimpleSet {
-  // 设置为元素设置为Map类型可以方便的使用内置的方法，我们不用重复造轮子
-  // Map类型也便于扩展
-  // 仅仅只关心键，值不关心，设置为boolean类型
-  private elements: Map<number, boolean>;
+class SimpleSet<T> {
+  private elements: Map<T, boolean>;
 
-  constructor() {
-    this.elements = new Map<number, boolean>();
+  constructor(initialElements: T[] = []) {
+    this.elements = new Map<T, boolean>();
+    initialElements.forEach(element => this.add(element));
   }
 
-  add(element: number): SimpleSet {
+  add(element: T): this {
     this.elements.set(element, true);
-    return this; // 链式调用
+    return this; 
   }
 
-  has(element: number): boolean {
+  has(element: T): boolean {
     return this.elements.has(element);
   }
 
-  delete(element: number): boolean {
+  delete(element: T): boolean {
     return this.elements.delete(element);
   }
 
-  values(): number[] {
+  values(): T[] {
     return Array.from(this.elements.keys());
   }
-}
 
-// 示例使用
-const mySet = new SimpleSet();
-
-mySet.add(1).add(2).add(3); // 链式调用
-
-console.log(mySet.values()); // 输出: [1, 2, 3]
-
-mySet.delete(2);
-console.log(mySet.values()); // 输出: [1, 3]
-```
-
-其他都没有什么问题，但是如果我们还有一个子类，子类可能需要处理其他的内容。
-
-```typescript
-class MutableSet extends SimpleSet {
-  show() { 
-    console.log('MutableSet show')
-  }
-}
-```
-
-乍一看没啥问题，但是我们如果再此调用add方法，就能看到具体的一些区别了
-
-```typescript
-const mySet = new MutableSet();
-
-mySet.add(1).add(2).add(3).show(); // add方法返回的是SimpleSet,根本调用不到show方法
-```
-
-所以，为了保证子类的this返回正确，只能重写覆盖父类的add方法，目的仅仅就只是为了改写返回的对象类型
-
-```typescript
-class MutableSet extends SimpleSet {
-  add(element: number): MutableSet {
-    super.add(element);
-    return this;
-  }
-  show() { 
-    console.log('MutableSet show')
-  }
-}
-```
-
-其实，我们可以用一个简单的办法就能解决，在父类中，add方法的返回类型直接定义为`this`
-
-```typescript
-// 父类
-class SimpleSet {
-  add(element: number): this {
-    this.elements.set(element, true);
-    return this; // 链式调用
-  }
-	......
-}
-
-// 子类  
-class MutableSet extends SimpleSet {
-  show() { 
-    console.log('MutableSet show')
+  static of<E>(...elements: E[]): SimpleSet<E> {
+    const set = new SimpleSet<E>();
+    elements.forEach(element => set.add(element));
+    return set;
   }
 }
 
-// 示例使用
-const mySet = new MutableSet();
-mySet.add(1).add(2).add(3).show();  
+const mySet = new SimpleSet<number>();
+mySet.add(1).add(2).add(3).add(4)
+console.log(mySet)
+
+const mySet2 = new SimpleSet(["a","b","c"]);
+console.log(mySet2)
+
+const mySet3 = SimpleSet.of(100, 200, 300);
+console.log(mySet3.values()); // 输出: [100, 200, 300]
 ```
+
+很明显，在声明类是绑定的泛型`T`，在每个实例方法和实例属性中都可以使用。
+
+在构造函数中加上了参数，这样在new对象的时候，可以传入对应的类型，typescript可以进行类型推导，否则默认类型推导是`unknown`
+
+新增了一个静态方法of，注意在**静态方法中不能访问类的泛型**。毕竟是直接通过类型调用的，所以必须要自己重新声明泛型参数
