@@ -31,6 +31,17 @@ class Animal {
     this.#type = value;
   }
 
+  // 在js中静态的属性或方法都是挂载到Animal实例上的
+  // 静态属性
+  static kingdom = "Animal";
+
+  // 静态方法
+  static showKingdom(): string {
+    console.log(Animal.kingdom);
+    return `The kingdom is ${Animal.kingdom}`;
+  }
+
+  // 在js中show方法是挂载到原型上的Animal.prototype
   show() {
     console.log(this.name, this.color, this._age);
   }
@@ -39,3 +50,5 @@ class Animal {
 const cat = new Animal("Joker", "black", 3, "Dog");
 cat.age = 5;
 cat.type = "Cat";
+const k = Animal.showKingdom();
+console.log(k);
