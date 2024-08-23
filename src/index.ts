@@ -1,29 +1,45 @@
-// 关键字: extends(继承) super(父类的构造函数) override(重写)
+// this在ts中, 可以用作值, 也可以用作类型
+// 实现一个简化版的set数据结构
+class SimpleSet {
+  private elements: Map<number, boolean>;
+  constructor() {
+    this.elements = new Map<number, boolean>;
+  }
 
-// 继承是具有单根性的，也就是说一个子类只能继承一个父类
-class Father {
-  constructor(public name: string) { }
+  // 返回值为this, 以便链式调用, 以及在子类中调用父类方法时, 返回子类实例
+  add(element: number): this {
+    console.log(this.constructor.name); // 当子类调用父类方法时, this指向子类实例
+    this.elements.set(element, true);
+    return this;  // 返回this, 以便链式调用, 这里的this是SimpleSet类型
+  }
 
-  info() {
-    console.log("Father Info");
+  has(element: number) {
+    return this.elements.has(element);
+  }
+
+  delete(element: number) {
+    return this.elements.delete(element);
+  }
+
+  values() {
+    return Array.from(this.elements.keys());
   }
 }
 
-class Child extends Father {
-  constructor(public name: string, public age: number) {
-    super(name);
-  }
+class MutableSet extends SimpleSet {
+  // override add(element: number): MutableSet {
+  //   super.add(element);
+  //   return this;
+  // }
 
-  // 重写父类的 info 方法, override 关键字可以让编译器检查是否真的重写了父类的方法, 如果父类中没有 info 方法, 则会报错
-  override info(): string {
-    console.log("Child Info");
-    super.info(); // 调用父类的 info 方法
-    return "Child Info";
+  show() {
+    console.log(`${this.constructor.name} Show`);
   }
 }
 
-const f = new Father('father');
-f.info();
+const mySet = new MutableSet();
+mySet.add(1).add(2).add(3).show();
+console.log(mySet.has(5), mySet.has(2));
 
-const c = new Child('child', 20);
-c.info();
+mySet.delete(3);
+console.log(mySet.values());
