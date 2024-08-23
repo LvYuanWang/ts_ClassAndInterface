@@ -1,54 +1,29 @@
-// 访问器(存取器)属性如果有set, 那么默认get返回具体的类型
-// 所以将本身属性可选这种写法和访问器属性get,set一起写就有逻辑冲突
+// 关键字: extends(继承) super(父类的构造函数) override(重写)
 
-class Animal {
-  public name: string;
-  protected color: string;
-  private _age: number;
-  #type: string;
-  constructor(name: string, color: string, _age: number, type: string) {
-    this.name = name;
-    this.color = color;
-    this._age = _age;
-    this.#type = type;
-  }
+// 继承是具有单根性的，也就是说一个子类只能继承一个父类
+class Father {
+  constructor(public name: string) { }
 
-  get age() {
-    // if (this._age === undefined) throw new Error("年龄未知");
-    return this._age;
-  }
-
-  set age(value: number) {
-    if (value < 0 || value > 150) throw new Error("年龄不符合规范...");
-    this._age = value;
-  }
-
-  get type(): string {
-    return this.#type;
-  }
-
-  set type(value: "Cat" | "Dog") {
-    this.#type = value;
-  }
-
-  // 在js中静态的属性或方法都是挂载到Animal实例上的
-  // 静态属性
-  static kingdom = "Animal";
-
-  // 静态方法
-  static showKingdom(): string {
-    console.log(Animal.kingdom);
-    return `The kingdom is ${Animal.kingdom}`;
-  }
-
-  // 在js中show方法是挂载到原型上的Animal.prototype
-  show() {
-    console.log(this.name, this.color, this._age);
+  info() {
+    console.log("Father Info");
   }
 }
 
-const cat = new Animal("Joker", "black", 3, "Dog");
-cat.age = 5;
-cat.type = "Cat";
-const k = Animal.showKingdom();
-console.log(k);
+class Child extends Father {
+  constructor(public name: string, public age: number) {
+    super(name);
+  }
+
+  // 重写父类的 info 方法, override 关键字可以让编译器检查是否真的重写了父类的方法, 如果父类中没有 info 方法, 则会报错
+  override info(): string {
+    console.log("Child Info");
+    super.info(); // 调用父类的 info 方法
+    return "Child Info";
+  }
+}
+
+const f = new Father('father');
+f.info();
+
+const c = new Child('child', 20);
+c.info();

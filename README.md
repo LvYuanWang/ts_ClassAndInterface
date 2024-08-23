@@ -1,40 +1,31 @@
-## 静态成员
+## 继承
 
-在typescript中，你可以使用static关键字来表示一个成员为静态成员
+有面向对象，那么肯定就有继承，和JavaScript一样，使用`extends`关键字来实现继承，当然类的继承还是具有单根性的特点
 
 ```typescript
-class Animal { 
-  
-  // 静态属性
-  static kingdom = "Animal"; 
-
-  // 静态方法
-  static showKingdom(): string {
-    console.log(Animal.kingdom);
-    console.log(this.kingdom);
-    return `The kingdom is ${Animal.kingdom}.`;
+class Father { 
+  constructor(public name: string) { }
+  info(): void { 
+    console.log('Father Info');
   }
-  ......
 }
-const s = Animal.showKingdom();
-console.log(s)  
+
+class Child extends Father { 
+  constructor(public name: string, public age: number) { 
+    super(name);
+  }
+  override info(): string {
+    console.log("Child Info");
+    super.info();
+    return "";
+  }
+}
 ```
 
-在静态方法中虽然也能使用this，但是静态方法中的`this` 指的不是类的实例，而是类本身。这意味着在静态方法内部，`this` 指向的是类的构造函数，而不是类的实例。
+父类和子类的概念相信大家已经不在陌生了，上面主要用到了几个关键字`extends`，`super`和`override`
 
-其实如果我们把target降低到ES5以下(**注意**：降低target，如果没有lib的话，默认支持的语法同样也会降级，`#`这种写法肯定就不支持了)，观察编译之后的js文件，你就会发现**静态成员直接被挂载在函数体上**，而**实例成员挂载在原型上**
+**`super`：**在构造方法中调用使用`super()`,而且这种写法只能在构造方法中使用，如果子类有构造方法，那么必须调用`super()`,无论构造方法有没有参数，这样才可以把父子关系连接起来。不用担心你会忘记，你不写的话会报错！
 
-```typescript
-// 静态方法
-Animal.showKingdom = function () {
-  console.log(Animal.kingdom);
-  console.log(this.kingdom);
-  return "The kingdom is ".concat(Animal.kingdom);
-};
-// 实例方法
-Animal.prototype.show = function () {
-  console.log(this.name, this.color, this._age);
-};
-```
+在一般方法中调用使用`super.xxx()`的形式，表示调用的是父类的方法，特别是在子类重写父类的方法中（子类方法和父类方法同名的情况，其实就是覆盖父类的同名方法），这样可以很明显的区分调用的是父类的方法还是子类的方法。**super只能调用父类的方法，不能访问父类的属性**
 
-## 
+**`override`：** Typescript4.x新增的关键字，这是一个提醒关键字。使用`override`修饰的方法就表明该方法就是一个重写的覆盖父类的方法。如果子类中的方法没有在父类中出现过，那么不能使用`override`

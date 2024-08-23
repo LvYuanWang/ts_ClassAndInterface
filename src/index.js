@@ -1,40 +1,28 @@
 "use strict";
-class Animal {
+class Father {
     name;
-    color;
-    _age;
-    #type;
-    constructor(name, color, _age, type) {
+    constructor(name) {
         this.name = name;
-        this.color = color;
-        this._age = _age;
-        this.#type = type;
     }
-    get age() {
-        return this._age;
-    }
-    set age(value) {
-        if (value < 0 || value > 150)
-            throw new Error("年龄不符合规范...");
-        this._age = value;
-    }
-    get type() {
-        return this.#type;
-    }
-    set type(value) {
-        this.#type = value;
-    }
-    static kingdom = "Animal";
-    static showKingdom() {
-        console.log(Animal.kingdom);
-        return `The kingdom is ${Animal.kingdom}`;
-    }
-    show() {
-        console.log(this.name, this.color, this._age);
+    info() {
+        console.log("Father Info");
     }
 }
-const cat = new Animal("Joker", "black", 3, "Dog");
-cat.age = 5;
-cat.type = "Cat";
-const k = Animal.showKingdom();
-console.log(k);
+class Child extends Father {
+    name;
+    age;
+    constructor(name, age) {
+        super(name);
+        this.name = name;
+        this.age = age;
+    }
+    info() {
+        console.log("Child Info");
+        super.info();
+        return "Child Info";
+    }
+}
+const f = new Father('father');
+f.info();
+const c = new Child('child', 20);
+c.info();
