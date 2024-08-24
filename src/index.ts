@@ -1,62 +1,122 @@
-// this在ts中, 可以用作值, 也可以用作类型
-// 实现一个简化版的set数据结构
+type Bar = {
+  a: number;
+  b: number;
+}
 
-// 类的泛型支持
-class SimpleSet<T> {
-  private elements: Map<T, boolean>;
-  constructor(initialElements: T[] = []) {
-    this.elements = new Map<T, boolean>;
-    initialElements.forEach(element => this.add(element));
-  }
+type Foo = {
+  // bar: () => Bar;
+  foo: () => number;
+  // 指定 this 的类型, 当调用 foo 方法时, this 的类型为 { a: number, b: number }
+} & ThisType<Bar>
 
-  // 返回值为this, 以便链式调用, 以及在子类中调用父类方法时, 返回子类实例
-  add(element: T): this {
-    console.log(this.constructor.name); // 当子类调用父类方法时, this指向子类实例
-    this.elements.set(element, true);
-    return this;  // 返回this, 以便链式调用, 这里的this是SimpleSet类型
-  }
-
-  has(element: T) {
-    return this.elements.has(element);
-  }
-
-  delete(element: T) {
-    return this.elements.delete(element);
-  }
-
-  values() {
-    return Array.from(this.elements.keys());
-  }
-
-  // 静态泛型方法
-  static fo<E>(...elements: E[]): SimpleSet<E> {
-    const set = new SimpleSet<E>();
-    elements.forEach(element => set.add(element));
-    return set;
+const foo: Foo = {
+  // bar: () => ({ a: 1, b: 2 }),
+  foo() {
+    return this.a + this.b;
   }
 }
 
-class MutableSet<T> extends SimpleSet<T> {
-  override add(element: T): this {
-    super.add(element);
-    return this;
-  }
 
-  show() {
-    console.log(`${this.constructor.name} Show`);
-  }
+type ObjectDescriptor<D, M> = {
+  data?: D;
+  methods?: M & ThisType<D & M>; // 方法中 'this' 的类型是 D & M
+};
+
+function makeObject<D, M>(desc: ObjectDescriptor<D, M>): D & M {
+  let data: object = desc.data || {};
+  let methods: object = desc.methods || {};
+  return { ...data, ...methods } as D & M;
 }
 
-const mySet1 = new SimpleSet<number>();
-mySet1.add(1).add(2).add(3);
-console.log(mySet1.has(5), mySet1.has(2));
+let obj = makeObject({
+  data: {
+    x: 0,
+    y: 0,
+    getPoint() {
+      // this 能找到自身的x和y, 但是不能找到 methods 里面的方法
+      console.log(this.x, this.y);
+    }
+  },
+  methods: {
+    moveBy(dx: number, dy: number) {
+      this.x += dx; // 强类型的 this
+      this.y += dy; // 强类型的 this
+    },
+    moveTo() {
+      console.log(this.x);
+    }
+  },
+});
 
-mySet1.delete(3);
-console.log(mySet1.values());
 
-const mySet2 = new SimpleSet(["a", "b", "c"]);
-console.log(mySet2.values());
+// 类型体操: 可串联构造器
+type Chainable<T = {}> = {
+  option<K extends string, V>(key: Exclude<K, keyof T>, value: V): Chainable<Omit<T, K> & { [key in K]: V }>
+  get(): T
+}
 
-// 调用静态泛型方法
-const mySet3 = SimpleSet.fo(100, 200, 300);
-console.log(mySet3.values());
+
+declare const a: Chainable
+
+const result1 = a
+  .option('foo', 123)
+  .option('bar', { value: 'Hello World' })
+  .option('name', 'type-challenges')
+  .get()
+
+const result2 = a
+  .option('name', 'another name')
+  // @ts-expect-error
+  .option('name', 'last name')
+  .get()
+
+const result3 = a
+  .option('name', 'another name')
+  // @ts-expect-error
+  .option('name', 123)
+  .get()
+
+
+// 类型体操: Simple Vue
+declare function SimpleVue<D, C, M>(options: {
+  data: (this: never) => D,
+  computed: C & ThisType<D>,
+  methods: M & ThisType<D & getComputed<C> & M>
+}): any
+
+type getComputed<T> = {
+  [key in keyof T]: T[key] extends (...args: any) => infer R ? R : never;
+}
+
+
+SimpleVue({
+  data() {
+    // @ts-expect-error
+    this.firstName
+    // @ts-expect-error
+    this.getRandom()
+    // @ts-expect-error
+    this.data()
+
+    return {
+      firstName: 'Type',
+      lastName: 'Challenges',
+      amount: 10,
+    }
+  },
+  computed: {
+    fullName() {
+      return `${this.firstName} ${this.lastName}`
+    },
+  },
+  methods: {
+    getRandom() {
+      return Math.random()
+    },
+    hi() {
+      alert(this.amount)
+      alert(this.fullName.toLowerCase())
+      alert(this.getRandom())
+    },
+  }
+})
