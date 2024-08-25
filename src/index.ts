@@ -1,122 +1,53 @@
-type Bar = {
-  a: number;
-  b: number;
-}
-
-type Foo = {
-  // bar: () => Bar;
-  foo: () => number;
-  // 指定 this 的类型, 当调用 foo 方法时, this 的类型为 { a: number, b: number }
-} & ThisType<Bar>
-
-const foo: Foo = {
-  // bar: () => ({ a: 1, b: 2 }),
-  foo() {
-    return this.a + this.b;
+// 抽象类: 不能被实例化, 只能被继承, 目的是为了实现多态
+// 程序架构设计
+// 面向对象的三大特征: 封装 继承 多态
+// 前端使用抽象类和接口 主要是使用他们的结构化特性
+abstract class Foo {
+  // 抽象属性: 只能在抽象类中定义, 不能在普通类中定义
+  abstract name: string;
+  // 抽象访问器属性
+  abstract get nameGetter(): string;
+  // 抽象方法: 只能在抽象类中定义, 不能在普通类中定义, 子类必须实现, 除非子类也是抽象类
+  abstract method(name: string): string;
+  show() {
+    console.log('show');
+  }
+  // 静态函数: 在抽象类中定义, 子类可以继承, 也可以重写
+  static info() {
+    console.log('static info function');
   }
 }
 
-
-type ObjectDescriptor<D, M> = {
-  data?: D;
-  methods?: M & ThisType<D & M>; // 方法中 'this' 的类型是 D & M
-};
-
-function makeObject<D, M>(desc: ObjectDescriptor<D, M>): D & M {
-  let data: object = desc.data || {};
-  let methods: object = desc.methods || {};
-  return { ...data, ...methods } as D & M;
-}
-
-let obj = makeObject({
-  data: {
-    x: 0,
-    y: 0,
-    getPoint() {
-      // this 能找到自身的x和y, 但是不能找到 methods 里面的方法
-      console.log(this.x, this.y);
-    }
-  },
-  methods: {
-    moveBy(dx: number, dy: number) {
-      this.x += dx; // 强类型的 this
-      this.y += dy; // 强类型的 this
-    },
-    moveTo() {
-      console.log(this.x);
-    }
-  },
-});
-
-
-// 类型体操: 可串联构造器
-type Chainable<T = {}> = {
-  option<K extends string, V>(key: Exclude<K, keyof T>, value: V): Chainable<Omit<T, K> & { [key in K]: V }>
-  get(): T
-}
-
-
-declare const a: Chainable
-
-const result1 = a
-  .option('foo', 123)
-  .option('bar', { value: 'Hello World' })
-  .option('name', 'type-challenges')
-  .get()
-
-const result2 = a
-  .option('name', 'another name')
-  // @ts-expect-error
-  .option('name', 'last name')
-  .get()
-
-const result3 = a
-  .option('name', 'another name')
-  // @ts-expect-error
-  .option('name', 123)
-  .get()
-
-
-// 类型体操: Simple Vue
-declare function SimpleVue<D, C, M>(options: {
-  data: (this: never) => D,
-  computed: C & ThisType<D>,
-  methods: M & ThisType<D & getComputed<C> & M>
-}): any
-
-type getComputed<T> = {
-  [key in keyof T]: T[key] extends (...args: any) => infer R ? R : never;
-}
-
-
-SimpleVue({
-  data() {
-    // @ts-expect-error
-    this.firstName
-    // @ts-expect-error
-    this.getRandom()
-    // @ts-expect-error
-    this.data()
-
-    return {
-      firstName: 'Type',
-      lastName: 'Challenges',
-      amount: 10,
-    }
-  },
-  computed: {
-    fullName() {
-      return `${this.firstName} ${this.lastName}`
-    },
-  },
-  methods: {
-    getRandom() {
-      return Math.random()
-    },
-    hi() {
-      alert(this.amount)
-      alert(this.fullName.toLowerCase())
-      alert(this.getRandom())
-    },
+class Baz extends Foo {
+  name = 'Baz';
+  get nameGetter() {
+    return this.name;
   }
-})
+  method(name: string) {
+    return name;
+  }
+}
+
+const baz = new Baz();
+baz.show();
+Baz.info();
+Foo.info();
+
+
+abstract class Person {
+  abstract name: string;
+  abstract age: number;
+  abstract say(): string;
+}
+
+// implements 实现接口
+class Student implements Person {
+  name = 'Tom';
+  age = 18;
+  say() {
+    return `Hello, my name is ${this.name}, I'm ${this.age} years old.`;
+  };
+  eat() {
+    console.log('eat');
+  }
+}
