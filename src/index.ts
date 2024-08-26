@@ -1,33 +1,53 @@
-class User {
-  constructor(public id: number, public name: string) { }
+type ParamsType = {
+  id: string
 }
 
-interface Repository<U> {
-  findById(id: number): U | undefined;
-  save(item: U): void;
-  delete(item: U): boolean;
+interface ParamsInterface {
+  id: string
 }
 
-class UserRepository implements Repository<User> {
-  private users = new Map<number, User>;
+let t: ParamsType = { id: '1' };
+type T = typeof t;  // { id: string }
+let i: ParamsInterface = { id: '1' };
+type I = typeof i;  // ParamsInterface  因为Interface有声明合并的特性，所以这里是ParamsInterface
 
-  findById(id: number): User | undefined {
-    return this.users.get(id);
-  }
+// interface ParamsInterface {
+//   name: string
+// }
 
-  save(item: User): void {
-    this.users.set(item.id, item);
-  }
 
-  delete(item: User): boolean {
-    return this.users.delete(item.id);
-  }
+type MyRecord = {
+  [key: string]: string
+  // age: number  // error
 }
 
-const userRepository = new UserRepository();
-userRepository.save(new User(1, 'John Doe'));
-userRepository.save(new User(2, 'Jane Doe'));
-userRepository.save(new User(3, 'Alice Doe'));
-userRepository.delete({ id: 2, name: 'Jane Doe' });
-console.log(userRepository.findById(3));  // User { id: 3, name: 'Alice Doe' }
-console.log(userRepository.findById(2));  // undefined
+// const record: MyRecord = {
+//   name: 'Joker',
+//   type: 'person',
+//   sex: '男',
+//   age: 20
+// }
+
+
+interface MyInterface {
+  name: string
+}
+
+type MyType = {
+  name: string
+}
+
+const example1: MyInterface = { name: 'example1' };
+const example2: MyType = { name: 'example2' };
+
+let record: MyRecord = {};
+// record = example1;  // error: 因为interface有声明合并的特性, TS不确定你后面会不会再加属性, 所以不允许赋值
+record = example2;
+// interface MyInterface {
+//   age: number
+// }
+
+function useParams<ParamsOrKey extends string | Record<string, string | undefined>>() { }
+
+useParams<MyType>();
+// useParams<MyInterface>();
