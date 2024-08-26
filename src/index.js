@@ -4,10 +4,10 @@ class Foo {
         console.log('show');
     }
     static info() {
-        console.log('static info function');
+        console.log('info');
     }
 }
-class Baz extends Foo {
+class Baz {
     name = 'Baz';
     get nameGetter() {
         return this.name;
@@ -15,21 +15,54 @@ class Baz extends Foo {
     method(name) {
         return name;
     }
+    show(add) {
+        return add;
+    }
 }
-const baz = new Baz();
-baz.show();
-Baz.info();
-Foo.info();
-class Person {
-}
-class Student {
-    name = 'Tom';
+class UserClass {
+    id = 1;
+    name = 'Jack';
     age = 18;
-    say() {
-        return `Hello, my name is ${this.name}, I'm ${this.age} years old.`;
+    get nameGetter() {
+        return this.name;
     }
     ;
-    eat() {
-        console.log('eat');
+    method(name) {
+        return name;
+    }
+    show(add) {
+        return add;
+    }
+    type = 'User';
+    get() {
+        return this.type;
+    }
+    set(v) {
+        this.type = v;
     }
 }
+class AdminUser {
+    id = 1;
+    name = 'Jack';
+    age = 18;
+    gender = "男";
+    get nameGetter() {
+        return this.name;
+    }
+    ;
+    method(name) {
+        return name;
+    }
+    show(add) {
+        return add;
+    }
+    type = 'User';
+    get() {
+        return this.type;
+    }
+    set(v) {
+        this.type = v;
+    }
+}
+const user = new AdminUser();
+console.log(user.nameGetter);
