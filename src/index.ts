@@ -1,53 +1,144 @@
-type ParamsType = {
-  id: string
+// 1.在ts中, 类是结构化类型, 但是需要注意访问修饰符会触发ts类型检查
+// 2.在ts中, 类既声明值也声明类型, 而且类的类型有两种: 实例化对象类型, 类构造函数类型
+/*
+class User {
+  constructor(public id: number, public name: string) { }
+  show(addr: string) {
+    console.log(addr);
+  }
 }
 
-interface ParamsInterface {
-  id: string
+class Person {
+  constructor(public id: number, public name: string, private tel: string) { }
+  show(addr: string) {
+    console.log(`${this.id}---${this.name}---${addr}`);
+  }
 }
 
-let t: ParamsType = { id: '1' };
-type T = typeof t;  // { id: string }
-let i: ParamsInterface = { id: '1' };
-type I = typeof i;  // ParamsInterface  因为Interface有声明合并的特性，所以这里是ParamsInterface
-
-// interface ParamsInterface {
-//   name: string
-// }
-
-
-type MyRecord = {
-  [key: string]: string
-  // age: number  // error
+function desc(user: User) {
+  user.show('Beijing');
 }
 
-// const record: MyRecord = {
-//   name: 'Joker',
-//   type: 'person',
-//   sex: '男',
-//   age: 20
-// }
+const u = new User(1, 'Tom');
+const p = new Person(2, 'Jerry', '123333864');
 
-
-interface MyInterface {
-  name: string
+const a = {
+  id: 3,
+  name: 'ruby',
+  tel: '123456789',
+  show(addr: string) {
+    console.log('hello' + addr);
+  }
 }
 
-type MyType = {
-  name: string
+desc(u);
+desc(p);
+desc(a);
+// desc({ id: 4, name: 'lucy', tel: '134444444',show(addr: string) { console.log('hello' + addr)}})  // 报错, 对象字面量只能指定已知属性, 并且'tel'不在类型'User'中
+*/
+
+class MyMap {
+  state: Record<string, string> = {};
+
+  set(key: string, value: string) {
+    this.state[key] = value;
+  }
+
+  get(key: string) {
+    return this.state[key];
+  }
+
+  keys() {
+    return Object.keys(this.state);
+  }
+
+  values() {
+    return Object.values(this.state);
+  }
+
+  static of(...entries: [string, string][]) {
+    const map = new MyMap();
+    entries.forEach(entry => map.set(entry[0], entry[1]));
+    return map;
+  }
 }
 
-const example1: MyInterface = { name: 'example1' };
-const example2: MyType = { name: 'example2' };
+const m1 = new MyMap();
+m1.set('id', '1');
+m1.set('name', 'Joker');
+console.log(m1.get('name'));
+console.log(m1.values());
 
-let record: MyRecord = {};
-// record = example1;  // error: 因为interface有声明合并的特性, TS不确定你后面会不会再加属性, 所以不允许赋值
-record = example2;
-// interface MyInterface {
-//   age: number
-// }
+const m2 = MyMap.of(['id', '2'], ['name', 'Tom'], ['gender', '男']);
+console.log(m2.keys());
 
-function useParams<ParamsOrKey extends string | Record<string, string | undefined>>() { }
 
-useParams<MyType>();
-// useParams<MyInterface>();
+class User {
+  constructor(public id: number, public name: string) { }
+  show(addr: string) {
+    console.log(addr);
+  }
+}
+
+function method1(target: User) {
+  console.log(target.id);
+  console.log(target.name);
+  target.show("BeiJing");
+}
+
+// method2需要一个类, 在函数中对类进行处理
+// 类的构造函数类型 new (...args: any[]) => any
+// 这样做的目的是为了让 method2 函数能够接受任何符合这个构造函数签名的类，而不仅仅是 User 类
+function method2(target: new (...args: [number, string]) => User) {
+  const t = new target(1, "Joker");
+  console.log(t.id);
+  console.log(t.name);
+  t.show("ShangHai");
+}
+
+// 构造函数类型
+// type MyMapConstructorType = new (...args: any[]) => MyMap;
+type MyMapConstructorType = typeof MyMap;
+// 通过构造函数类型获取实例化类型
+// type MyMapInstanceType = InstanceType<new (...args: any[]) => MyMap>;
+type MyMapInstanceType = InstanceType<MyMapConstructorType>;
+
+const m3: MyMapInstanceType = new MyMap();
+// const m = new Map()
+
+
+// MyMap 的实例化类型
+interface MyMap {
+  state: Record<string, string>;
+  set(key: string, value: string): void;
+  get(key: string): string;
+  keys(): string[];
+  values(): string[];
+}
+
+// MyMap 的构造函数类型
+interface MyMapConstructor {
+  // 任何实现 MyMapConstructor 接口的类都必须提供一个无参数的构造函数，该构造函数返回一个 MyMap 类型的实例
+  new(): MyMap; // 构造函数签名,当使用new关键字调用这个构造函数时,返回MyMap类型的实例
+  of(...args: [string, string][]): MyMap;
+  readonly prototype: MyMap;
+}
+
+let m: MyMapConstructor;
+type M1 = typeof m;
+type M2 = InstanceType<M1>;
+type M3 = InstanceType<MyMapConstructor>;
+
+
+class Person {
+  constructor(public name: string) { }
+}
+
+type PersonInstance = InstanceType<typeof Person>;  // Person: 获取Person的实例化类型
+const person: PersonInstance = new Person('Joker');
+
+interface UserConstructor {
+  new(name: string): User;
+}
+
+type UserInstance = InstanceType<UserConstructor>;
